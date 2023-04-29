@@ -4,7 +4,7 @@ import pytesseract
 from gtts import gTTS
 import regex as re
 from textblob import TextBlob
-
+import speech_recognition as sr
 
 
 
@@ -43,8 +43,6 @@ def enhanceImg(image):
     return img
 
 
-
-
 # function to generate an audio file from text in a given language
 def generate_audio(text, lang, filename):
     audio_file = gTTS(text=text, lang=lang, slow=False)
@@ -54,6 +52,27 @@ def generate_audio(text, lang, filename):
 def text_to_speech(text, lang):
     speech = gTTS(text=text, lang=lang, slow=False)
     return speech
+
+
+def speech_to_text():
+    # initialize the recognizer
+    r = sr.Recognizer()
+
+    # use the default microphone as the audio source
+    with sr.Microphone() as source:
+        print("Speak something...")
+        # listen for the audio and convert it to text
+        audio = r.listen(source)
+        try:
+            text = r.recognize_google(audio)
+            print("You said:", text)
+        except sr.UnknownValueError:
+            print("Sorry, I could not understand what you said.")
+        except sr.RequestError as e:
+            print("Request error: {0}".format(e))
+
+
+
 
 
 # Streamlit app
@@ -108,19 +127,21 @@ def app():
                 file_name="audio.mp3",
                 mime="audio/mp3")
 
-        # Text-to-Speech section
-        audio_filename2 = "audio2.mp3"
-        generate_audio(clean_text_output, lang_code_aud, audio_filename)
+        # # Text-to-Speech section
+        # audio_filename2 = "audio2.mp3"
+        # generate_audio(clean_text_output, lang_code_aud, audio_filename)
 
-        st.write(" ")
-        st.write("Convert text to speech:")
-        text_input = st.text_input("Enter text to convert to speech:")
-        if text_input:
-            generate_audio(text_input, lang_code_aud, audio_filename2)
-            st.write("Audio Output:")
-            audio_file2 = open(audio_filename2, "rb")
-            audio_bytes2 = audio_file2.read()
-            st.audio(audio_bytes2, format="audio/mp3")
+        # st.write(" ")
+        # st.write("Convert text to speech:")
+        # text_input = st.text_input("Enter text to convert to speech:")
+        # if text_input:
+        #     generate_audio(text_input, lang_code_aud, audio_filename2)
+        #     st.write("Audio Output:")
+        #     audio_file2 = open(audio_filename2, "rb")
+        #     audio_bytes2 = audio_file2.read()
+        #     st.audio(audio_bytes2, format="audio/mp3")
+        if st.button("Start Speech Recognition"):
+            speech_to_text()
 
 if __name__ == '__main__':
     app()

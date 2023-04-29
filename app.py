@@ -4,7 +4,7 @@ import pytesseract
 from gtts import gTTS
 import regex as re
 from textblob import TextBlob
-
+import speech_recognition as sr
 
 
 
@@ -17,10 +17,16 @@ def ocr(image, lang):
 def clean_text(text, lang):
     if lang == 'en':
         clean_text = re.sub('[^a-zA-Z\s]+', '', text)
+        text = text.replace('\n', ' ')
+    # Remove extra spaces
+        text = re.sub(' +', ' ', text)
+    
     elif lang== 'hi':
+        
+        text = text.replace('\n', ' ')
         # Remove non-Hindi characters and digits
-        clean_text = re.sub(r"[^\u0900-\u097F\s]+", "", text)
 
+        clean_text = re.sub(r"[^\u0900-\u097F\s]+", "", text)
     else:
         clean_text = text
     return clean_text
@@ -32,14 +38,12 @@ def enhanceImg(image):
 
     # Apply contrast enhancement
     enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(1.8)
+    img = enhancer.enhance(1.5)
 
     # Apply brightness enhancement
     enhancer = ImageEnhance.Brightness(img)
     img = enhancer.enhance(1.3)
     return img
-
-
 
 
 # function to generate an audio file from text in a given language
@@ -51,6 +55,28 @@ def generate_audio(text, lang, filename):
 def text_to_speech(text, lang):
     speech = gTTS(text=text, lang=lang, slow=False)
     return speech
+
+
+def speech_to_text():
+    # create a recognizer object
+    r = sr.Recognizer()
+
+    # use the default microphone as the audio source
+    with sr.Microphone() as source:
+        # listen for the user's input
+        st.write("Listening...")
+        audio = r.listen(source)
+
+    try:
+        # use the Google Web Speech API to transcribe the audio
+        text = r.recognize_google(audio)
+        st.write("You said: ", text)
+    except sr.UnknownValueError:
+        st.write("Sorry, I could not understand your speech")
+    except sr.RequestError as e:
+        st.write("Sorry, could not request results from Google Speech Recognition service; {0}".format(e))
+
+
 
 
 # Streamlit app
@@ -76,12 +102,12 @@ def app():
 
     # If an image has been uploaded, perform OCR and generate audio files
     if uploaded_file is not None:
-        col1, col2 = st.columns([1, 2])
+        col1, col2 = st.columns([1.5, 1])
         with col1:
             st.write("Enhanced Image:")
 
             img = enhanceImg(uploaded_file)
-            st.image(img, use_column_width=True)
+            st.image(img, use_column_width=True, width=800)
 
         with col2:
             # st.write("OCR Output:")
@@ -103,21 +129,12 @@ def app():
                 label="Download Audio",
                 data=audio_bytes,
                 file_name="audio.mp3",
-                mime="audio/mp3")
+                mime="audio/mp3",
+                )
 
-        # Text-to-Speech section
-        audio_filename2 = "audio2.mp3"
-        generate_audio(clean_text_output, lang_code_aud, audio_filename)
 
-        st.write(" ")
-        st.write("Convert text to speech:")
-        text_input = st.text_input("Enter text to convert to speech:")
-        if text_input:
-            generate_audio(text_input, lang_code_aud, audio_filename2)
-            st.write("Audio Output:")
-            audio_file2 = open(audio_filename2, "rb")
-            audio_bytes2 = audio_file2.read()
-            st.audio(audio_bytes2, format="audio/mp3")
+    if st.button("Start Speech Recognition"):
+        speech_to_text()
 
 if __name__ == '__main__':
     app()
