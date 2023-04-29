@@ -5,6 +5,9 @@ from gtts import gTTS
 import regex as re
 from textblob import TextBlob
 
+
+
+
 # function to perform OCR on an image and extract the text
 def ocr(image, lang):
     text = pytesseract.image_to_string(image, timeout=5, lang=lang)
@@ -14,10 +17,13 @@ def ocr(image, lang):
 def clean_text(text, lang):
     if lang == 'en':
         clean_text = re.sub('[^a-zA-Z\s]+', '', text)
+        text = text.replace('\n', ' ')
+    # Remove extra spaces
+        text = re.sub(' +', ' ', text)
+    
     elif lang== 'hi':
         # Remove non-Hindi characters and digits
         clean_text = re.sub(r"[^\u0900-\u097F\s]+", "", text)
-
     else:
         clean_text = text
     return clean_text
@@ -29,7 +35,7 @@ def enhanceImg(image):
 
     # Apply contrast enhancement
     enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(1.8)
+    img = enhancer.enhance(1.5)
 
     # Apply brightness enhancement
     enhancer = ImageEnhance.Brightness(img)
@@ -73,12 +79,12 @@ def app():
 
     # If an image has been uploaded, perform OCR and generate audio files
     if uploaded_file is not None:
-        col1, col2 = st.columns([1, 2])
+        col1, col2 = st.columns([1.5, 1])
         with col1:
             st.write("Enhanced Image:")
 
             img = enhanceImg(uploaded_file)
-            st.image(img, use_column_width=True)
+            st.image(img, use_column_width=True, width=800)
 
         with col2:
             # st.write("OCR Output:")
