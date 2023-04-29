@@ -4,6 +4,11 @@ import pytesseract
 from gtts import gTTS
 import regex as re
 
+'''
+tried this code for uploading multiple files at once
+'''
+
+
 
 # function to perform OCR on an image and extract the text
 def ocr(image, lang):
